@@ -1,5 +1,6 @@
 package ir.piana.dev.common.handler;
 
+import ir.piana.dev.common.util.ContextLogger;
 import ir.piana.dev.common.util.FinalContainer;
 import ir.piana.dev.common.util.SelfExpiringHashMap;
 import ir.piana.dev.common.util.SelfExpiringMap;
@@ -22,6 +23,7 @@ import java.util.concurrent.Executors;
 
 @Configuration
 public class HandlerManagerAutoConfiguration {
+    private final ContextLogger logger = ContextLogger.getLogger(this.getClass());
     @Bean("reactiveCommonThreadPool")
     public ExecutorService reactiveCommonThreadPool(@Autowired ReactiveCore reactiveCore) {
         return Executors.newFixedThreadPool(reactiveCore.threadPoolSize);
@@ -83,6 +85,7 @@ public class HandlerManagerAutoConfiguration {
     }
 
     private static class HandlerManagerImpl implements HandlerManager {
+        private final ContextLogger logger = ContextLogger.getLogger(this.getClass());
         private final ExecutorService executorService;
 
         private final Map<Class<?>, HandlerContainer> handlerContainerMap;
@@ -117,7 +120,10 @@ public class HandlerManagerAutoConfiguration {
                                     try {
                                         return entry.getValue().invoke(handlerContainer.handlerBean, ctx);
                                     } catch (IllegalAccessException | InvocationTargetException e) {
-                                        throw new RuntimeException("invoke http call exception", e);
+                                        logger.error((HandlerContext<?>) ctx, e);
+                                        throw new HandlerRuntimeException(
+                                                (HandlerContext<?>) ctx,
+                                                HandlerErrorTypes.INTERNAL.internalError("invoke method call exception"), e);
                                     }
                                 }, executorService)
                                 .thenApplyAsync(
@@ -132,7 +138,9 @@ public class HandlerManagerAutoConfiguration {
                                 entry.getValue().invoke(handlerContainer.handlerBean, ctx);
                                 return ctx;
                             } catch (IllegalAccessException | InvocationTargetException e) {
-                                throw new RuntimeException("invoke method call exception", e);
+                                throw new HandlerRuntimeException(
+                                        (HandlerContext<?>) ctx,
+                                        HandlerErrorTypes.INTERNAL.internalError("invoke method call exception"), e);
                             }
                         }, executorService));
                     }
@@ -150,20 +158,23 @@ public class HandlerManagerAutoConfiguration {
                         if(cause instanceof HandlerRuntimeException)
                             deferredResult.setErrorResult(cause);
                         else
+                            logger.error(handlerContext, (Throwable) ex);
                             deferredResult.setErrorResult(new HandlerRuntimeException(
                                     handlerContext,
-                                    HandlerErrorTypes.UNKNOWN.unknownError("unknown error ocurred!"),
+                                    HandlerErrorTypes.UNKNOWN.unknownError("unknown error occurred!"),
                                     (Throwable) ex));
                     } else {
+                        logger.error(handlerContext, (Throwable) ex);
                         deferredResult.setErrorResult(new HandlerRuntimeException(
                                 handlerContext,
-                                HandlerErrorTypes.UNKNOWN.unknownError("unknown error ocurred!"),
+                                HandlerErrorTypes.UNKNOWN.unknownError("unknown error occurred!"),
                                 (Throwable) ex));
                     }
                 } else {
+                    logger.error(handlerContext, "unknown error occurred!");
                     deferredResult.setErrorResult(new HandlerRuntimeException(
                             handlerContext,
-                            HandlerErrorTypes.UNKNOWN.unknownError("unknown error ocurred!"),
+                            HandlerErrorTypes.UNKNOWN.unknownError("unknown error occurred!"),
                             (Throwable) ex));
                 }
                 return null;
