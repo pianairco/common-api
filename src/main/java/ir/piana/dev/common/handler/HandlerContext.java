@@ -4,7 +4,7 @@ public interface HandlerContext<Req> {
     boolean handlerName();
     boolean responded();
     String uniqueId();
-    RequestDto<Req> requestDto();
+    HandlerRequest<Req> request();
     HandlerContext addResultDto(ResultDto resultDto);
     ResultDto resultDto();
     <T> HandlerContext put(String key, T val);

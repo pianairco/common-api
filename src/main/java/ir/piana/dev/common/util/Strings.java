@@ -2,7 +2,6 @@ package ir.piana.dev.common.util;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Random;
 
 /**
  * Strings related utility methods.

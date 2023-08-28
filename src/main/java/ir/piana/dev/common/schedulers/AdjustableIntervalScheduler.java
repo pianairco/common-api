@@ -27,10 +27,11 @@ public abstract class AdjustableIntervalScheduler implements Runnable {
     private int initialDelay;
     private String initialDelayUnit;
 
-    @Autowired
-    private TaskScheduler scheduler;
     private String activeFrom;
     private String activeTo;
+
+    @Autowired
+    private TaskScheduler scheduler;
 
     @Setter(AccessLevel.NONE)
     private AtomicInteger counter = new AtomicInteger(0);

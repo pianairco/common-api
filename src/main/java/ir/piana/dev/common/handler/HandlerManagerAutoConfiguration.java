@@ -98,7 +98,7 @@ public class HandlerManagerAutoConfiguration {
         private final SelfExpiringMap<String, HandlerContext<?>> existingHandlerContextMap = new SelfExpiringHashMap<>();
 
         public DeferredResult<HandlerContext<?>> execute(
-                Class<?> beanClass, String callerUniqueId, RequestDto<?> requestDto) {
+                Class<?> beanClass, String callerUniqueId, HandlerRequest<?> handlerRequest) {
             DeferredResult deferredResult = new DeferredResult();
 
             FinalContainer<CompletableFuture> futures = new FinalContainer<>();
@@ -108,7 +108,7 @@ public class HandlerManagerAutoConfiguration {
                 if (handlerContainerMap.containsKey(callerUniqueId))
                     throw new RuntimeException("duplicate id!");
                 HandlerContext<?> handlerContext = BaseHandlerContext.create(
-                        handlerContainer.handlerBeanName, callerUniqueId, requestDto);
+                        handlerContainer.handlerBeanName, callerUniqueId, handlerRequest);
                 existingHandlerContextMap.put(callerUniqueId, handlerContext, 30_000l);
                 return handlerContext;
             }));
@@ -154,15 +154,17 @@ public class HandlerManagerAutoConfiguration {
                 HandlerContext handlerContext = existingHandlerContextMap.remove(callerUniqueId);
                 if (ex != null && ex instanceof Throwable) {
                     if (ex instanceof CompletionException) {
+                        logger.error(handlerContext, (Throwable) ex);
                         Throwable cause = ((CompletionException) ex).getCause();
                         if(cause instanceof HandlerRuntimeException)
                             deferredResult.setErrorResult(cause);
-                        else
-                            logger.error(handlerContext, (Throwable) ex);
-                            deferredResult.setErrorResult(new HandlerRuntimeException(
+                        else {
+                            HandlerRuntimeException handlerRuntimeException = new HandlerRuntimeException(
                                     handlerContext,
                                     HandlerErrorTypes.UNKNOWN.unknownError("unknown error occurred!"),
-                                    (Throwable) ex));
+                                    cause);
+                            deferredResult.setErrorResult(handlerRuntimeException);
+                        }
                     } else {
                         logger.error(handlerContext, (Throwable) ex);
                         deferredResult.setErrorResult(new HandlerRuntimeException(

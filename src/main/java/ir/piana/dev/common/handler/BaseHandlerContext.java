@@ -10,12 +10,12 @@ public class BaseHandlerContext<Req> implements HandlerContext<Req> {
     private final String uniqueId;
     private Map<String, Object> map;
     private ResultDto resultDto;
-    private RequestDto<Req> requestDto;
+    private HandlerRequest<Req> handlerRequest;
 
-    public BaseHandlerContext(String handlerName, String uniqueId, RequestDto<Req> requestDto) {
+    public BaseHandlerContext(String handlerName, String uniqueId, HandlerRequest<Req> handlerRequest) {
         this.handlerName = handlerName;
         this.uniqueId = uniqueId;
-        this.requestDto = requestDto;
+        this.handlerRequest = handlerRequest;
         this.responded = new AtomicBoolean(false);
         map = new LinkedHashMap<>();
     }
@@ -28,8 +28,8 @@ public class BaseHandlerContext<Req> implements HandlerContext<Req> {
         return new BaseHandlerContext<>(requestDto).uniqueId;
     }*/
 
-    public static HandlerContext<?> create(String handlerName, String uniqueId, RequestDto<?> requestDto) {
-        return new BaseHandlerContext<>(handlerName, uniqueId, requestDto);
+    public static HandlerContext<?> create(String handlerName, String uniqueId, HandlerRequest<?> handlerRequest) {
+        return new BaseHandlerContext<>(handlerName, uniqueId, handlerRequest);
     }
 
     @Override
@@ -43,8 +43,8 @@ public class BaseHandlerContext<Req> implements HandlerContext<Req> {
     }
 
     @Override
-    public RequestDto<Req> requestDto() {
-        return requestDto;
+    public HandlerRequest<Req> request() {
+        return handlerRequest;
     }
 
     @Override
