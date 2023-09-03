@@ -13,11 +13,6 @@ public class HandlerResponseBuilder {
     @Autowired
     private JsonParser jsonParser;
 
-    public <Res> HandlerResponse status(Res responseDto) {
-        JsonObject jsonObject = JsonObject.mapFrom(responseDto);
-        return new HandlerResponseImpl(jsonObject.toBuffer(), jsonParser.fromJson(jsonObject), responseDto);
-    }
-
     public <Res> HandlerResponse fromDto(Res responseDto) {
         JsonObject jsonObject = JsonObject.mapFrom(responseDto);
         return new HandlerResponseImpl(jsonObject.toBuffer(), jsonParser.fromJson(jsonObject), responseDto);
