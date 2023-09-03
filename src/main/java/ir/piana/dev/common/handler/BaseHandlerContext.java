@@ -1,23 +1,27 @@
 package ir.piana.dev.common.handler;
 
+import ir.piana.dev.common.util.HandlerInterStateTransporter;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BaseHandlerContext<Req> implements HandlerContext<Req> {
-    private final AtomicBoolean responded;
+    private final AtomicBoolean responded = new AtomicBoolean(false);
     private final String handlerName;
-    private final String uniqueId;
-    private Map<String, Object> map;
-    private ResultDto resultDto;
+    private final long uniqueId;
+    /*private Map<String, Object> map = new LinkedHashMap<>();*/
+//    private HandlerResponse<?> handlerResponse;
+    private HandlerInterStateTransporter interStateTransporter;
     private HandlerRequest<Req> handlerRequest;
 
-    public BaseHandlerContext(String handlerName, String uniqueId, HandlerRequest<Req> handlerRequest) {
+    public BaseHandlerContext(
+            String handlerName,
+            long uniqueId,
+            HandlerRequest<Req> handlerRequest) {
         this.handlerName = handlerName;
         this.uniqueId = uniqueId;
         this.handlerRequest = handlerRequest;
-        this.responded = new AtomicBoolean(false);
-        map = new LinkedHashMap<>();
     }
 
     /*public static HandlerContext<?> fromRequest(RequestDto<?> requestDto) {
@@ -28,13 +32,16 @@ public class BaseHandlerContext<Req> implements HandlerContext<Req> {
         return new BaseHandlerContext<>(requestDto).uniqueId;
     }*/
 
-    public static HandlerContext<?> create(String handlerName, String uniqueId, HandlerRequest<?> handlerRequest) {
+    public static HandlerContext<?> create(
+            String handlerName,
+            long uniqueId,
+            HandlerRequest<?> handlerRequest) {
         return new BaseHandlerContext<>(handlerName, uniqueId, handlerRequest);
     }
 
     @Override
-    public boolean handlerName() {
-        return false;
+    public String handlerName() {
+        return handlerName;
     }
 
     @Override
@@ -43,34 +50,38 @@ public class BaseHandlerContext<Req> implements HandlerContext<Req> {
     }
 
     @Override
+    public long uniqueId() {
+        return uniqueId;
+    }
+
+    @Override
     public HandlerRequest<Req> request() {
         return handlerRequest;
     }
 
-    @Override
-    public HandlerContext addResultDto(ResultDto resultDto) {
-        this.resultDto = resultDto;
+    /*public <Res> HandlerContext<Req> addHandlerResponse(HandlerResponse<Res> handlerResponse) {
+        this.handlerResponse = handlerResponse;
         return this;
-    }
+    }*/
+
+    /*@Override
+    public <Res> HandlerResponse<Res> handlerResponse() {
+        return (HandlerResponse<Res>) handlerResponse;
+    }*/
 
     @Override
-    public ResultDto resultDto() {
-        return resultDto;
-    }
-
-    @Override
-    public <T> HandlerContext put(String key, T val) {
-        map.put(key, val);
+    public <T> HandlerContext<Req> put(String key, T val) {
+        interStateTransporter.put(key, val);
         return this;
     }
 
     @Override
     public <T> T get(String key) {
-        return (T) map.get(key);
+        return (T) interStateTransporter.getValue(key);
     }
 
     @Override
-    public String uniqueId() {
-        return "";
+    public HandlerInterStateTransporter getInterstateTransporter() {
+        return interStateTransporter;
     }
 }

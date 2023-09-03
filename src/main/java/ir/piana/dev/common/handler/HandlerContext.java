@@ -1,12 +1,15 @@
 package ir.piana.dev.common.handler;
 
+import ir.piana.dev.common.util.HandlerInterStateTransporter;
+
 public interface HandlerContext<Req> {
-    boolean handlerName();
+    String handlerName();
     boolean responded();
-    String uniqueId();
+    long uniqueId();
     HandlerRequest<Req> request();
-    HandlerContext addResultDto(ResultDto resultDto);
-    ResultDto resultDto();
-    <T> HandlerContext put(String key, T val);
+//    <Res> HandlerContext<Req> addHandlerResponse(HandlerResponse<Res> resultDto);
+//    <Res> HandlerResponse<Res> handlerResponse();
+    <T> HandlerContext<Req> put(String key, T val);
     <T> T get(String key);
+    HandlerInterStateTransporter getInterstateTransporter();
 }

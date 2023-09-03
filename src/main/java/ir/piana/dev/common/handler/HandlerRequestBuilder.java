@@ -2,88 +2,112 @@ package ir.piana.dev.common.handler;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
+import ir.piana.dev.common.util.MapStrings;
 import ir.piana.dev.jsonparser.json.JsonParser;
 import ir.piana.dev.jsonparser.json.JsonTarget;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.function.Consumer;
 
+@Component
 public class HandlerRequestBuilder<Req> {
+    @Autowired
+    private JsonParser jsonParser;
 
-    private HandlerRequestImpl<Req> requestDto;
-
-    private HandlerRequestBuilder(HandlerRequestImpl<Req> requestDto) {
-        this.requestDto = requestDto;
+    public HandlerRequest fromString(String serializedRequest, Class<?> dtoClass, MapStrings mapStrings, String authPhrase) {
+        Buffer buffer = Buffer.buffer(serializedRequest);
+        return new HandlerRequestImpl(dtoClass != null ? jsonParser.fromJson(buffer.toJsonObject()) : null, buffer, dtoClass, mapStrings, authPhrase);
     }
 
-    public static HandlerRequestBuilder<?> fromString(JsonParser jsonParser, String serializedRequest, Class<?> dtoClass) {
-        return new HandlerRequestBuilder<>(new HandlerRequestImpl<>(jsonParser, Buffer.buffer(serializedRequest), dtoClass));
+    public HandlerRequest withoutRequest(MapStrings mapStrings, String authPhrase) {
+        JsonTarget jsonTarget = jsonParser.fromJson(JsonObject.of());
+        return new HandlerRequestImpl<>(jsonTarget, jsonTarget.getJsonObject().toBuffer(), null, mapStrings, authPhrase);
     }
 
-    public static HandlerRequestBuilder<?> withoutRequest() {
-        return new HandlerRequestBuilder<>(new HandlerRequestImpl<>(null, Buffer.buffer("{}"), null));
+    public HandlerRequest fromBytes(byte[] serializedRequest, Class dtoClass, MapStrings mapStrings, String authPhrase) {
+        Buffer buffer = Buffer.buffer(serializedRequest);
+        return new HandlerRequestImpl(dtoClass != null ? jsonParser.fromJson(buffer.toJsonObject()) : jsonParser.fromJson(JsonObject.of()), Buffer.buffer(serializedRequest), dtoClass, mapStrings, authPhrase);
     }
 
-    public static HandlerRequestBuilder<?> fromBytes(JsonParser jsonParser, byte[] serializedRequest, Class dtoClass) {
-        return new HandlerRequestBuilder<>(new HandlerRequestImpl<>(jsonParser, Buffer.buffer(serializedRequest), dtoClass));
+    public HandlerRequest fromJson(JsonObject json, Class dtoClass, MapStrings mapStrings, String authPhrase) {
+        return new HandlerRequestImpl(jsonParser.fromJson(json), json.toBuffer(), dtoClass, mapStrings, authPhrase);
     }
 
-    public static HandlerRequestBuilder<?> fromJson(JsonParser jsonParser, JsonObject json, Class dtoClass) {
-        HandlerRequestBuilder handlerRequestBuilder = new HandlerRequestBuilder<>(
-                new HandlerRequestImpl<>(jsonParser, json.toBuffer(), dtoClass));
-        return handlerRequestBuilder;
+    public HandlerRequest fromBuffer(Buffer buffer, Class<?> dtoType, MapStrings mapStrings, String authPhrase) {
+        return new HandlerRequestImpl<>(dtoType != null ? jsonParser.fromJson(buffer.toJsonObject()) : jsonParser.fromJson(JsonObject.of()), buffer, dtoType, mapStrings, authPhrase);
     }
 
-    public static HandlerRequestBuilder<?> fromBuffer(JsonParser jsonParser, Buffer buffer, Class<?> dtoType) {
-        return new HandlerRequestBuilder<>(new HandlerRequestImpl<>(jsonParser, buffer, dtoType));
+    public HandlerRequestCompleter withoutBody() {
+        return new HandlerRequestCompleter(new HandlerRequestImpl());
     }
 
-    public HandlerRequestBuilder<Req> addAdditionalParam(String key, String value) {
-        requestDto.additionalParams.put(key, value);
-        return this;
+    public class HandlerRequestCompleter {
+        private HandlerRequestImpl handlerRequest;
+
+        public HandlerRequestCompleter(HandlerRequestImpl handlerRequest) {
+            this.handlerRequest = handlerRequest;
+        }
+
+        public HandlerRequestCompleter setAdditionalParam(Consumer<MapStrings.Appender> supplier) {
+            MapStrings.Builder consume = MapStrings.toConsume();
+            supplier.accept(consume);
+            handlerRequest.additionalParams = consume.build();
+            return this;
+        }
+
+        public HandlerRequestCompleter setAuthPhrase(String authPhrase) {
+            handlerRequest.authPhrase = authPhrase;
+            return this;
+        }
+
+        public HandlerRequest build() {
+            return handlerRequest;
+        }
     }
 
-    public HandlerRequestBuilder<Req> addAdditionalParams(Iterable<Map.Entry<String, String>> iterable) {
-        iterable.forEach(i -> requestDto.additionalParams.put(i.getKey(), i.getValue()));
-        return this;
-    }
-
-    public HandlerRequest<Req> build() {
-        return requestDto;
-    }
-
-    private static class HandlerRequestImpl<Req> implements HandlerRequest<Req> {
-        private final JsonParser jsonParser;
+    private class HandlerRequestImpl<Req> implements HandlerRequest<Req> {
         private final Buffer buffer;
-        private JsonTarget json;
+        private JsonTarget jsonTarget;
         private Req dto;
-
         private Class<?> dtoType;
-
-        private final Map<String, String> additionalParams = new LinkedHashMap<>();
+        private MapStrings additionalParams;
+        private String authPhrase;
 
 //        public HandlerRequestImpl() {
 //        }
 
-//        public HandlerRequestImpl(JsonObject json) {
+        //        public HandlerRequestImpl(JsonObject json) {
 //            this.json = json;
 //        }
-        public HandlerRequestImpl(JsonParser jsonParser, Buffer buffer, Class<?> dtoType) {
-            this.jsonParser = jsonParser;
+        public HandlerRequestImpl(JsonTarget jsonTarget, Buffer buffer, Class<?> dtoType, MapStrings additionalParams, String authPhrase) {
+            this.jsonTarget = jsonTarget;
             this.buffer = buffer;
             this.dtoType = dtoType;
+            this.additionalParams = additionalParams;
+            this.authPhrase = authPhrase;
+        }
+
+        public HandlerRequestImpl() {
+            this.jsonTarget = jsonParser.fromJson(JsonObject.of());
+            this.buffer = jsonTarget.getJsonObject().toBuffer();
         }
 
         @Override
         public JsonTarget getJsonTarget() {
-            if (json == null) {
+            if (jsonTarget == null) {
                 synchronized (buffer) {
-                    if (json == null) {
-                        json = jsonParser.fromJson(buffer.toJsonObject());
+                    if (jsonTarget == null) {
+                        jsonTarget = jsonParser.fromJson(buffer.toJsonObject());
                     }
                 }
             }
-            return json;
+            return jsonTarget;
+        }
+
+        @Override
+        public String getAuthPhrase() {
+            return authPhrase;
         }
 
         @Override
@@ -97,10 +121,8 @@ public class HandlerRequestBuilder<Req> {
             if (dto == null && dtoType != null) {
                 synchronized (buffer) {
                     if (dto == null) {
-                        if (dtoType.isAssignableFrom(JsonTarget.class))
-                            dto = (Req) json;
-                        else
-                            dto = (Req) getJsonTarget().mapTo(dtoType);
+                        if (dtoType.isAssignableFrom(JsonTarget.class)) dto = (Req) jsonTarget;
+                        else dto = (Req) getJsonTarget().mapTo(dtoType);
                     }
                 }
             }
@@ -108,8 +130,8 @@ public class HandlerRequestBuilder<Req> {
         }
 
         @Override
-        public String getAdditionalParam(String key) {
-            return additionalParams.get(key);
+        public MapStrings getAdditionalParam() {
+            return additionalParams;
         }
     }
 }

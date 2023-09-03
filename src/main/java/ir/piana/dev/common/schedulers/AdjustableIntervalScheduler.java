@@ -42,6 +42,8 @@ public abstract class AdjustableIntervalScheduler implements Runnable {
 
     @EventListener(ApplicationReadyEvent.class)
     void createScheduler() {
+        if (initialDelayUnit == null)
+            initialDelayUnit = "SECONDS";
         addTaskToScheduler(initialDelay, ChronoUnit.valueOf(initialDelayUnit));
     }
 

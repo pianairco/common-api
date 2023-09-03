@@ -1,23 +1,29 @@
 package ir.piana.dev.common.handler;
 
 public class HandlerRuntimeException extends RuntimeException {
+    private boolean responded;
+    private HandlerDetailedError detailedError;
     private HandlerContext context;
-    private DetailedError detailedError;
 
-    public HandlerRuntimeException(
+    HandlerRuntimeException(
             HandlerContext context,
-            DetailedError detailedError,
+            HandlerDetailedError detailedError,
             Throwable throwable) {
-        super(detailedError.getErrorMessage(), throwable);
-        this.context = context;
+        super(detailedError.getErrorMessageKey(), throwable);
+        this.responded = context.responded();
         this.detailedError = detailedError;
+        this.context = context;
     }
 
-    public HandlerContext getContext() {
-        return context;
+    public boolean isResponded() {
+        return responded;
     }
 
-    public DetailedError getDetailedError() {
+    public HandlerDetailedError getDetailedError() {
         return detailedError;
+    }
+
+    HandlerContext getContext() {
+        return context;
     }
 }

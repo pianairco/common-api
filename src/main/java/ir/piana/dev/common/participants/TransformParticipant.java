@@ -1,6 +1,7 @@
 package ir.piana.dev.common.participants;
 
-import ir.piana.dev.common.util.ContextLogger;
+import ir.piana.dev.common.handler.ContextLogger;
+import ir.piana.dev.common.handler.ContextLoggerProvider;
 import ir.piana.dev.jsonparser.json.JsonParser;
 import ir.piana.dev.jsonparser.json.JsonTarget;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +10,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class TransformParticipant {
-    protected final ContextLogger logger = ContextLogger.getLogger(this.getClass());
+    @Autowired
+    protected ContextLoggerProvider logger;
 
     @Autowired
     private JsonParser jsonParser;
