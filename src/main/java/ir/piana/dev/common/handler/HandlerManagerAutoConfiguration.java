@@ -184,7 +184,7 @@ public class HandlerManagerAutoConfiguration {
         private Method provideResponseMethod;
 
         @Override
-        public <Res> DeferredResult<HandlerResponse<Res>> execute(
+        public DeferredResult<HandlerResponse> execute(
                 Class<?> beanClass, HandlerRequest<?> handlerRequest) {
             DeferredResult deferredResult = new DeferredResult();
             final FinalContainer<CompletableFuture> futures = new FinalContainer<>();

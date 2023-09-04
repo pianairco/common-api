@@ -52,10 +52,10 @@ public class HandlerResponseBuilder {
         }
     }
 
-    private static class HandlerResponseImpl<Res> implements HandlerResponse<Res> {
+    private static class HandlerResponseImpl implements HandlerResponse {
         private Buffer buffer;
         private JsonTarget jsonTarget;
-        private Res dto;
+        private Object dto;
         private MapStrings additionalParams = MapStrings.toProduce();
         private String authPhrase;
 
@@ -64,7 +64,7 @@ public class HandlerResponseBuilder {
             this.jsonTarget = jsonTarget;
         }
 
-        public HandlerResponseImpl(Buffer buffer, JsonTarget jsonTarget, Res dto) {
+        public HandlerResponseImpl(Buffer buffer, JsonTarget jsonTarget, Object dto) {
             this.buffer = buffer;
             this.jsonTarget = jsonTarget;
             this.dto = dto;
@@ -85,8 +85,8 @@ public class HandlerResponseBuilder {
         }
 
         @Override
-        public Res getDto() {
-            return dto;
+        public <Res> Res getDto() {
+            return (Res) dto;
         }
 
         @Override
