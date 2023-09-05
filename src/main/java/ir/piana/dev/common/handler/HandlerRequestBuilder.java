@@ -18,8 +18,10 @@ public class HandlerRequestBuilder<Req> {
     public HandlerRequest<Req> fromString(
             String serializedRequest, Class<Req> dtoClass, MapStrings mapStrings, String authPhrase) {
         Buffer buffer = Buffer.buffer(serializedRequest);
-        return new HandlerRequestImpl(dtoClass != null ? jsonParser.fromJson(buffer.toJsonObject()) :
-                null, buffer, dtoClass, mapStrings, authPhrase);
+        return new HandlerRequestImpl(
+                /*dtoClass != null ? jsonParser.fromJson(buffer.toJsonObject()) : jsonParser.fromJson(JsonObject.of())*/
+                jsonParser.fromJson(buffer.toJsonObject()),
+                buffer, dtoClass, mapStrings, authPhrase);
     }
 
     public HandlerRequest<Req> withoutRequest(MapStrings mapStrings, String authPhrase) {
@@ -31,8 +33,9 @@ public class HandlerRequestBuilder<Req> {
     public HandlerRequest<Req> fromBytes(
             byte[] serializedRequest, Class<Req> dtoClass, MapStrings mapStrings, String authPhrase) {
         Buffer buffer = Buffer.buffer(serializedRequest);
-        return new HandlerRequestImpl(dtoClass != null ?
-                jsonParser.fromJson(buffer.toJsonObject()) : jsonParser.fromJson(JsonObject.of()),
+        return new HandlerRequestImpl(/*dtoClass != null ?
+                jsonParser.fromJson(buffer.toJsonObject()) : jsonParser.fromJson(JsonObject.of())*/
+                jsonParser.fromJson(buffer.toJsonObject()),
                 Buffer.buffer(serializedRequest),
                 dtoClass, mapStrings, authPhrase);
     }
@@ -45,8 +48,9 @@ public class HandlerRequestBuilder<Req> {
 
     public HandlerRequest<Req> fromBuffer(
             Buffer buffer, Class<Req> dtoType, MapStrings mapStrings, String authPhrase) {
-        return new HandlerRequestImpl(dtoType != null ?
-                jsonParser.fromJson(buffer.toJsonObject()) : jsonParser.fromJson(JsonObject.of()),
+        return new HandlerRequestImpl(/*dtoType != null ?
+                jsonParser.fromJson(buffer.toJsonObject()) : jsonParser.fromJson(JsonObject.of())*/
+                jsonParser.fromJson(buffer.toJsonObject()),
                 buffer, dtoType, mapStrings, authPhrase);
     }
 
