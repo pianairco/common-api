@@ -7,9 +7,9 @@ public abstract class BaseRequestHandler<Req> implements RequestHandler<Req> {
     protected final ContextLoggerProvider contextLoggerProvider;
 
     @Autowired
-    protected HandlerResponseBuilder handlerResponseBuilder;
+    protected HandlerResponseBuilder responseBuilder;
     @Autowired
-    protected HandlerRuntimeExceptionThrower handlerRuntimeExceptionThrower;
+    protected HandlerRuntimeExceptionThrower thrower;
 
     protected BaseRequestHandler(
             ContextLoggerProvider contextLoggerProvider) {

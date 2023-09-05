@@ -8,6 +8,7 @@ import ir.piana.dev.jsonparser.json.JsonTarget;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.Serializable;
 import java.util.function.Consumer;
 
 @Component
@@ -20,10 +21,21 @@ public class HandlerResponseBuilder {
                 jsonTarget.getJsonObject().toBuffer(), jsonTarget));
     }
 
+    public <Res> HandlerResponseCompleter fromJsonTarget(JsonTarget jsonTarget, Class<Res> dtoType) {
+        return new HandlerResponseCompleter(new HandlerResponseImpl(
+                jsonTarget.getJsonObject().toBuffer(), jsonTarget, jsonTarget.mapTo(dtoType)));
+    }
+
     public <Res> HandlerResponseCompleter fromDto(Res responseDto) {
         JsonObject jsonObject = JsonObject.mapFrom(responseDto);
         return new HandlerResponseCompleter(new HandlerResponseImpl(
                 jsonObject.toBuffer(), jsonParser.fromJson(jsonObject), responseDto));
+    }
+
+    public HandlerResponseCompleter withoutBody() {
+        JsonObject jsonObject = JsonObject.of();
+        return new HandlerResponseCompleter(new HandlerResponseImpl(
+                jsonObject.toBuffer(), jsonParser.fromJson(jsonObject), new Object()));
     }
 
     public class HandlerResponseCompleter {
