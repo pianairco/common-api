@@ -1,7 +1,5 @@
 package ir.piana.dev.common.handler;
 
-import ir.piana.dev.common.util.HandlerInterStateTransporter;
-
 public interface HandlerContext<Req> {
     String handlerName();
     boolean responded();

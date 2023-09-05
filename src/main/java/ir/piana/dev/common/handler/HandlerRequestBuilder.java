@@ -15,27 +15,39 @@ public class HandlerRequestBuilder<Req> {
     @Autowired
     private JsonParser jsonParser;
 
-    public HandlerRequest fromString(String serializedRequest, Class<?> dtoClass, MapStrings mapStrings, String authPhrase) {
+    public HandlerRequest<Req> fromString(
+            String serializedRequest, Class<Req> dtoClass, MapStrings mapStrings, String authPhrase) {
         Buffer buffer = Buffer.buffer(serializedRequest);
-        return new HandlerRequestImpl(dtoClass != null ? jsonParser.fromJson(buffer.toJsonObject()) : null, buffer, dtoClass, mapStrings, authPhrase);
+        return new HandlerRequestImpl(dtoClass != null ? jsonParser.fromJson(buffer.toJsonObject()) :
+                null, buffer, dtoClass, mapStrings, authPhrase);
     }
 
-    public HandlerRequest withoutRequest(MapStrings mapStrings, String authPhrase) {
+    public HandlerRequest<Req> withoutRequest(MapStrings mapStrings, String authPhrase) {
         JsonTarget jsonTarget = jsonParser.fromJson(JsonObject.of());
-        return new HandlerRequestImpl<>(jsonTarget, jsonTarget.getJsonObject().toBuffer(), null, mapStrings, authPhrase);
+        return new HandlerRequestImpl(jsonTarget, jsonTarget.getJsonObject().toBuffer(),
+                null, mapStrings, authPhrase);
     }
 
-    public HandlerRequest fromBytes(byte[] serializedRequest, Class dtoClass, MapStrings mapStrings, String authPhrase) {
+    public HandlerRequest<Req> fromBytes(
+            byte[] serializedRequest, Class<Req> dtoClass, MapStrings mapStrings, String authPhrase) {
         Buffer buffer = Buffer.buffer(serializedRequest);
-        return new HandlerRequestImpl(dtoClass != null ? jsonParser.fromJson(buffer.toJsonObject()) : jsonParser.fromJson(JsonObject.of()), Buffer.buffer(serializedRequest), dtoClass, mapStrings, authPhrase);
+        return new HandlerRequestImpl(dtoClass != null ?
+                jsonParser.fromJson(buffer.toJsonObject()) : jsonParser.fromJson(JsonObject.of()),
+                Buffer.buffer(serializedRequest),
+                dtoClass, mapStrings, authPhrase);
     }
 
-    public HandlerRequest fromJson(JsonObject json, Class dtoClass, MapStrings mapStrings, String authPhrase) {
-        return new HandlerRequestImpl(jsonParser.fromJson(json), json.toBuffer(), dtoClass, mapStrings, authPhrase);
+    public HandlerRequest<Req> fromJson(
+            JsonObject json, Class<Req> dtoClass, MapStrings mapStrings, String authPhrase) {
+        return new HandlerRequestImpl(jsonParser.fromJson(json), json.toBuffer(),
+                dtoClass, mapStrings, authPhrase);
     }
 
-    public HandlerRequest fromBuffer(Buffer buffer, Class<?> dtoType, MapStrings mapStrings, String authPhrase) {
-        return new HandlerRequestImpl<>(dtoType != null ? jsonParser.fromJson(buffer.toJsonObject()) : jsonParser.fromJson(JsonObject.of()), buffer, dtoType, mapStrings, authPhrase);
+    public HandlerRequest<Req> fromBuffer(
+            Buffer buffer, Class<Req> dtoType, MapStrings mapStrings, String authPhrase) {
+        return new HandlerRequestImpl(dtoType != null ?
+                jsonParser.fromJson(buffer.toJsonObject()) : jsonParser.fromJson(JsonObject.of()),
+                buffer, dtoType, mapStrings, authPhrase);
     }
 
     public HandlerRequestCompleter withoutBody() {
@@ -43,7 +55,7 @@ public class HandlerRequestBuilder<Req> {
     }
 
     public class HandlerRequestCompleter {
-        private HandlerRequestImpl handlerRequest;
+        private final HandlerRequestImpl handlerRequest;
 
         public HandlerRequestCompleter(HandlerRequestImpl handlerRequest) {
             this.handlerRequest = handlerRequest;
@@ -61,26 +73,25 @@ public class HandlerRequestBuilder<Req> {
             return this;
         }
 
-        public HandlerRequest build() {
+        public HandlerRequest<Req> build() {
             return handlerRequest;
         }
     }
 
-    private class HandlerRequestImpl<Req> implements HandlerRequest<Req> {
+    private class HandlerRequestImpl implements HandlerRequest<Req> {
         private final Buffer buffer;
-        private JsonTarget jsonTarget;
+        private volatile JsonTarget jsonTarget;
         private Req dto;
         private Class<?> dtoType;
         private MapStrings additionalParams;
         private String authPhrase;
 
-//        public HandlerRequestImpl() {
-//        }
-
-        //        public HandlerRequestImpl(JsonObject json) {
-//            this.json = json;
-//        }
-        public HandlerRequestImpl(JsonTarget jsonTarget, Buffer buffer, Class<?> dtoType, MapStrings additionalParams, String authPhrase) {
+        HandlerRequestImpl(
+                JsonTarget jsonTarget,
+                Buffer buffer,
+                Class<?> dtoType,
+                MapStrings additionalParams,
+                String authPhrase) {
             this.jsonTarget = jsonTarget;
             this.buffer = buffer;
             this.dtoType = dtoType;
@@ -88,7 +99,7 @@ public class HandlerRequestBuilder<Req> {
             this.authPhrase = authPhrase;
         }
 
-        public HandlerRequestImpl() {
+        HandlerRequestImpl() {
             this.jsonTarget = jsonParser.fromJson(JsonObject.of());
             this.buffer = jsonTarget.getJsonObject().toBuffer();
         }

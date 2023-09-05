@@ -1,9 +1,5 @@
 package ir.piana.dev.common.handler;
 
-import ir.piana.dev.common.util.HandlerInterStateTransporter;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BaseHandlerContext<Req> implements HandlerContext<Req> {
@@ -22,6 +18,7 @@ public class BaseHandlerContext<Req> implements HandlerContext<Req> {
         this.handlerName = handlerName;
         this.uniqueId = uniqueId;
         this.handlerRequest = handlerRequest;
+        this.interStateTransporter = new HandlerInterStateTransporter();
     }
 
     /*public static HandlerContext<?> fromRequest(RequestDto<?> requestDto) {
