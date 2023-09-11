@@ -2,6 +2,7 @@ package ir.piana.dev.common.vertx;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.file.FileSystemOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
@@ -32,6 +33,9 @@ public class VertxAutoConfiguration {
                                     .setPort(core.metrics.port))
                             .setEmbeddedServerEndpoint(core.metrics.endpoint)));
         }
+        if (core.staticResource && core.fileCachingEnabled) {
+            vertxOptions.setFileSystemOptions(new FileSystemOptions().setFileCachingEnabled(true));
+        }
         vertxOptions.setPreferNativeTransport(core.preferNativeTransport);
 
         return Vertx.vertx(vertxOptions);
@@ -42,6 +46,8 @@ public class VertxAutoConfiguration {
     @ConfigurationProperties(prefix = "ir.piana.dev.common.vertx")
     static class VertxCore {
         private boolean preferNativeTransport;
+        private boolean staticResource;
+        private boolean fileCachingEnabled;
         private VertxMetrics metrics;
     }
 

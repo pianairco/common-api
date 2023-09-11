@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import ir.piana.dev.common.util.MapStrings;
 import ir.piana.dev.jsonparser.json.JsonParser;
 import ir.piana.dev.jsonparser.json.JsonTarget;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,26 +17,31 @@ public class HandlerResponseBuilder {
     @Autowired
     private JsonParser jsonParser;
 
+    public HandlerResponseCompleter fromBuffer(Buffer buffer) {
+        return new HandlerResponseCompleter(new HandlerResponseImpl(
+                buffer, null));
+    }
+
     public HandlerResponseCompleter fromJsonTarget(JsonTarget jsonTarget) {
         return new HandlerResponseCompleter(new HandlerResponseImpl(
                 jsonTarget.getJsonObject().toBuffer(), jsonTarget));
     }
 
     public <Res> HandlerResponseCompleter fromJsonTarget(JsonTarget jsonTarget, Class<Res> dtoType) {
-        return new HandlerResponseCompleter(new HandlerResponseImpl(
+        return new HandlerResponseCompleter(new HandlerResponseImpl<Res>(
                 jsonTarget.getJsonObject().toBuffer(), jsonTarget, jsonTarget.mapTo(dtoType)));
     }
 
     public <Res> HandlerResponseCompleter fromDto(Res responseDto) {
         JsonObject jsonObject = JsonObject.mapFrom(responseDto);
-        return new HandlerResponseCompleter(new HandlerResponseImpl(
+        return new HandlerResponseCompleter(new HandlerResponseImpl<Res>(
                 jsonObject.toBuffer(), jsonParser.fromJson(jsonObject), responseDto));
     }
 
-    public HandlerResponseCompleter withoutBody() {
+    public <Res> HandlerResponseCompleter withoutBody() {
         JsonObject jsonObject = JsonObject.of();
-        return new HandlerResponseCompleter(new HandlerResponseImpl(
-                jsonObject.toBuffer(), jsonParser.fromJson(jsonObject), new Object()));
+        return new HandlerResponseCompleter(new HandlerResponseImpl<Res>(
+                jsonObject.toBuffer(), jsonParser.fromJson(jsonObject), (Res) new Object()));
     }
 
     public class HandlerResponseCompleter {
@@ -46,9 +52,9 @@ public class HandlerResponseBuilder {
         }
 
         public HandlerResponseBuilder.HandlerResponseCompleter setAdditionalParam(
-                Consumer<MapStrings.Appender> supplier) {
+                Consumer<MapStrings.Appender> consumer) {
             MapStrings.Builder consume = MapStrings.toConsume();
-            supplier.accept(consume);
+            consumer.accept(consume);
             handlerResponse.additionalParams = consume.build();
             return this;
         }
@@ -64,7 +70,8 @@ public class HandlerResponseBuilder {
         }
     }
 
-    private static class HandlerResponseImpl implements HandlerResponse {
+    private static class HandlerResponseImpl<Res> implements HandlerResponse<Res> {
+        @Getter
         private Buffer buffer;
         private JsonTarget jsonTarget;
         private Object dto;
@@ -76,7 +83,7 @@ public class HandlerResponseBuilder {
             this.jsonTarget = jsonTarget;
         }
 
-        public HandlerResponseImpl(Buffer buffer, JsonTarget jsonTarget, Object dto) {
+        public HandlerResponseImpl(Buffer buffer, JsonTarget jsonTarget, Res dto) {
             this.buffer = buffer;
             this.jsonTarget = jsonTarget;
             this.dto = dto;
@@ -87,17 +94,13 @@ public class HandlerResponseBuilder {
             return jsonTarget;
         }
 
-        public Buffer getBuffer() {
-            return buffer;
-        }
-
         @Override
         public String getSerializedResponse() {
             return buffer.toString();
         }
 
         @Override
-        public <Res> Res getDto() {
+        public Res getDto() {
             return (Res) dto;
         }
 

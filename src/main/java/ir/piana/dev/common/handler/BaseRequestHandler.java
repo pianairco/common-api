@@ -1,8 +1,9 @@
 package ir.piana.dev.common.handler;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 
-public abstract class BaseRequestHandler<Req> implements RequestHandler<Req> {
+public abstract class BaseRequestHandler<Req, Res> implements RequestHandler<Req, Res> {
     protected final ContextLogger contextLogger;
     protected final ContextLoggerProvider contextLoggerProvider;
 

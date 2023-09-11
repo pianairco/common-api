@@ -1,10 +1,14 @@
 package ir.piana.dev.common.http.server;
 
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Map;
+
 @NoArgsConstructor
 @Setter
+@Getter
 public class HttpServerItem {
     private String name;
     private String host;
@@ -13,20 +17,5 @@ public class HttpServerItem {
      * in seconds
      */
     private int idleTimeout;
-
-    public String getName() {
-        return name;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public int getIdleTimeout() {
-        return idleTimeout;
-    }
+    private Map<String, Object> specificConfigs;
 }

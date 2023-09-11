@@ -153,7 +153,8 @@ public class HandlerManagerAutoConfiguration {
         private ContextLoggerProvider contextLoggerProvider;
         private HandlerContextThreadLocalProvider handlerContextThreadLocalProvider;
         private HandlerRuntimeExceptionThrower handlerRuntimeExceptionThrower;
-        private final ContextLogger logger;;
+        private final ContextLogger logger;
+        ;
         private final ExecutorService executorService;
 
         private final Map<Class<?>, HandlerContainer> handlerContainerMap;
@@ -269,7 +270,7 @@ public class HandlerManagerAutoConfiguration {
             futures.get().thenAcceptAsync(ctx -> {
                 try {
                     handlerContextThreadLocalProvider.set((HandlerContext) ctx);
-                    HandlerResponse handlerResponse = (HandlerResponse) provideResponseMethod.invoke(
+                    Object handlerResponse = provideResponseMethod.invoke(
                             handlerContainer.handlerBean,
                             ((HandlerContext) ctx).request(),
                             ((HandlerContext) ctx).getInterstateTransporter());
@@ -281,16 +282,17 @@ public class HandlerManagerAutoConfiguration {
                 } catch (IllegalAccessException e) {
                     throw new HandlerRuntimeException(
                             (HandlerContext<?>) ctx,
-                            HandlerErrorType.INTERNAL.generateDetailedError("invoke method call exception"), e);
+                            HandlerErrorType.INTERNAL.generateDetailedError(
+                                    "invoke method call exception"), e);
                 } catch (InvocationTargetException e) {
                     if (e.getTargetException() instanceof HandlerRuntimeException)
                         throw (HandlerRuntimeException) e.getTargetException();
                     throw new RuntimeException(e.getTargetException());
-//                                handlerExceptionThrower.proceed(HandlerErrorType.INTERNAL.generateDetailedError("error.unknown"));
+//                                handlerExceptionThrower.proceed(
+//                                HandlerErrorType.INTERNAL.generateDetailedError("error.unknown"));
                 } finally {
                     handlerContextThreadLocalProvider.remove();
                 }
-                /*existingHandlerContextMap.remove(callerUniqueId);*/
             }).exceptionallyAsync(ex -> {
                 HandlerContext handlerContext = existingHandlerContextMap.remove(uniqueIdContainer.get());
                 try {
