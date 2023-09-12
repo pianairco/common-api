@@ -1,4 +1,4 @@
-package ir.piana.dev.common.service;
+package ir.piana.dev.common.handler;
 
 import ir.piana.dev.common.util.MapAny;
 import ir.piana.dev.common.vertx.VertxAutoConfiguration;
@@ -13,7 +13,7 @@ import java.util.Map;
 @Configuration
 @Profile("handler-config")
 @Import(VertxAutoConfiguration.class)
-public class HandlerConfigProvider {
+public class HandlerConfigAutoConfiguration {
     @Bean
     @Primary
     @Profile("handler-config")
@@ -21,6 +21,10 @@ public class HandlerConfigProvider {
             AnnotationConfigApplicationContext applicationContext,
             HandlersConfigs handlersConfigs) {
         final Map<String, MapAny> mapAnyMap = new LinkedHashMap<>();
+        if (handlersConfigs.configs == null) {
+            mapAnyMap.put("primary", MapAny.toConsume().build());
+            return mapAnyMap;
+        }
         handlersConfigs.configs.entrySet().forEach(e -> {
             MapAny mapAny = MapAny.toConsume(e.getValue());
             mapAnyMap.put(e.getKey(), mapAny);
@@ -41,6 +45,7 @@ public class HandlerConfigProvider {
 
     @Setter
     @Component
+    @Profile("handler-config")
     @ConfigurationProperties(prefix = "handler-config")
     static class HandlersConfigs {
         private Map <String, Map<String, Object>> configs;

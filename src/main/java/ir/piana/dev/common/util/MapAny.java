@@ -14,9 +14,9 @@ public class MapAny {
         map = new LinkedHashMap<>();
     }
 
-    private MapAny(Map<String, Object> map) {
+    private MapAny(Map<String, ? extends Object> map) {
         this.modifiableMode = false;
-        this.map = map;
+        this.map = (Map<String, Object>) map;
     }
 
     public <T> T getValue(String key) {
@@ -52,7 +52,7 @@ public class MapAny {
         return new MapAny();
     }
 
-    public static MapAny toConsume(Map<String, Object> map) {
+    public static MapAny toConsume(Map<String, ? extends Object> map) {
         return new MapAny(map);
     }
 

@@ -14,4 +14,21 @@ public @interface Handler {
             annotation = Component.class
     )
     String value() default "";
+
+    String description() default "";
+
+    Class consume() default Object.class;
+
+    FieldDescription[] consumeFields() default {};
+
+    Class produce() default Object.class;
+
+    FieldDescription[] produceFields() default {};
+
+    @interface FieldDescription {
+        String name();
+        String type();
+        String pattern() default "";
+        String description() default "";
+    }
 }

@@ -3,7 +3,18 @@ package ir.piana.dev.common.util;
 import java.util.List;
 
 public class MapStringsTest {
+
+    public MapStringsTest() {
+        getStr().forEach(System.out::println);
+    }
+
+    List<String> getStr() {
+        return List.of("sd");
+    }
+
     public static void main(String[] args) {
+        MapStringsTest t = new MapStringsTest();
+
         MapStrings build = MapStrings.toConsume().putValue("a", "t").build();
 
         String a1 = build.getFirstValue("a");

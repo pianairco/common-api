@@ -1,5 +1,7 @@
 package ir.piana.dev.common.handler;
 
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BaseHandlerContext<Req> implements HandlerContext<Req> {
@@ -14,11 +16,14 @@ public class BaseHandlerContext<Req> implements HandlerContext<Req> {
     public BaseHandlerContext(
             String handlerName,
             long uniqueId,
-            HandlerRequest<Req> handlerRequest) {
+            HandlerRequest<Req> handlerRequest,
+            String sessionId) {
         this.handlerName = handlerName;
         this.uniqueId = uniqueId;
         this.handlerRequest = handlerRequest;
+//        this.sessionId = (handlerRequest.getAuthPhrase() == null || ).orElse(UUID.randomUUID().toString());
         this.interStateTransporter = new HandlerInterStateTransporter();
+        this.interStateTransporter.setSessionId(sessionId);
     }
 
     /*public static HandlerContext<?> fromRequest(RequestDto<?> requestDto) {
@@ -32,8 +37,9 @@ public class BaseHandlerContext<Req> implements HandlerContext<Req> {
     public static HandlerContext<?> create(
             String handlerName,
             long uniqueId,
-            HandlerRequest<?> handlerRequest) {
-        return new BaseHandlerContext<>(handlerName, uniqueId, handlerRequest);
+            HandlerRequest<?> handlerRequest,
+            String sessionId) {
+        return new BaseHandlerContext<>(handlerName, uniqueId, handlerRequest, sessionId);
     }
 
     @Override

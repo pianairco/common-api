@@ -16,7 +16,10 @@ public class HttpRouteItem {
     private String handlerClass;
     private List<String> roles;
     private String dtoType;
-    private String responseType;
+    private String consumeType;
+    private String produceType;
     private String response;
     private Map<String, String> configs;
+    private List<HttpProduceItem> produceModel;
+    private List<HttpProduceItem> produceCooke;
 }

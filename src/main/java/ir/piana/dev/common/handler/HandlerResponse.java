@@ -7,7 +7,6 @@ import ir.piana.dev.jsonparser.json.JsonTarget;
 public interface HandlerResponse<Res> extends CommonResponse {
     JsonTarget getJsonTarget();
     Buffer getBuffer();
-    String getAuthPhrase();
     String getSerializedResponse();
     Res getDto();
     MapStrings getAdditionalParam();

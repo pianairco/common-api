@@ -13,4 +13,5 @@ public class HttpRouterItem {
     private String serverName;
     private String templateEngineName;
     private List<HttpRouteItem> routes;
+    private String authPhraseProviderName;
 }

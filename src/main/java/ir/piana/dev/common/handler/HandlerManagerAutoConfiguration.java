@@ -1,5 +1,6 @@
 package ir.piana.dev.common.handler;
 
+import ir.piana.dev.common.auth.RequiredRoles;
 import ir.piana.dev.common.service.UniqueIdService;
 import ir.piana.dev.common.util.*;
 import lombok.Setter;
@@ -18,6 +19,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 @Configuration
 public class HandlerManagerAutoConfiguration {
@@ -39,11 +43,29 @@ public class HandlerManagerAutoConfiguration {
         }
     }
 
-    ThreadLocal threadLocal;
+    @Bean
+    Map<String, RequiredRoles> requiredRolesMap(HandlerRoleConfig handlerRoleConfig) {
+        final Map<String, RequiredRoles> requiredRolesMap = new LinkedHashMap<>();
+        if (handlerRoleConfig.items == null)
+            return requiredRolesMap;
+        handlerRoleConfig.items.forEach(handlerRoleItem -> {
+            requiredRolesMap.put(handlerRoleItem.handlerClassName,
+                    new RequiredRoles(
+                            handlerRoleItem.allRequired,
+                            Stream.of(Optional.ofNullable(handlerRoleItem.roles).orElse("")
+                                            .split(","))
+                                    .map(String::trim)
+                                    .filter(s -> !s.isEmpty())
+                                    .toList()));
+        });
+
+        return requiredRolesMap;
+    }
 
     @Bean
     HandlerManager getHandlerManager(
             ApplicationContext applicationContext,
+            Map<String, RequiredRoles> requiredRolesMap,
             HandlerRuntimeExceptionThrower handlerRuntimeExceptionThrower,
             Method provideResponseMethod,
             @Qualifier("reactiveCommonThreadPool") ExecutorService executorService,
@@ -78,6 +100,15 @@ public class HandlerManagerAutoConfiguration {
             Map<Integer, Method> chainStepMethodMap = new LinkedHashMap<>();
             Map<Integer, Method> rollbackMethodMap = new LinkedHashMap<>();
             Class originalClass = classFounds.get(entry.getKey());
+
+            if (entry.getValue() instanceof AuthorizableRequestHandler<?, ?>) {
+                if (requiredRolesMap.containsKey(classFounds.get(entry.getKey()).getName())) {
+                    ((AuthorizableRequestHandler) entry.getValue())
+                            .setRequiredRoles(requiredRolesMap.get(
+                                    classFounds.get(entry.getKey()).getName()
+                            ));
+                }
+            }
 
             Method[] originalDeclaredMethods = originalClass.getDeclaredMethods();
             Method[] beanDeclaredMethods = originalClass.getDeclaredMethods();
@@ -184,6 +215,9 @@ public class HandlerManagerAutoConfiguration {
         @Autowired
         private Method provideResponseMethod;
 
+        private final static Pattern UUID_PATTERN = Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+
+
         @Override
         public DeferredResult<HandlerResponse> execute(
                 Class<?> beanClass, HandlerRequest<?> handlerRequest) {
@@ -197,8 +231,12 @@ public class HandlerManagerAutoConfiguration {
                 uniqueIdContainer.set(uniqueIdService.getId());
                 if (handlerContainerMap.containsKey(uniqueIdContainer.get()))
                     throw new RuntimeException("duplicate id!");
+
+                Matcher matcher = UUID_PATTERN.matcher(Optional.ofNullable(handlerRequest.getAuthPhrase()).orElse(""));
+
                 HandlerContext<?> handlerContext = BaseHandlerContext.create(
-                        handlerContainer.handlerBeanName, uniqueIdContainer.get(), handlerRequest);
+                        handlerContainer.handlerBeanName, uniqueIdContainer.get(), handlerRequest,
+                        matcher.matches() ? handlerRequest.getAuthPhrase() : UUID.randomUUID().toString());
                 existingHandlerContextMap.put(handlerContext.uniqueId(), handlerContext, 30_000l);
                 return handlerContext;
             }));
@@ -206,6 +244,31 @@ public class HandlerManagerAutoConfiguration {
             final List<Method> rollbackMethods = new ArrayList<>();
 
             if (handlerContainer != null) {
+                if (handlerContainer.handlerBean instanceof AuthorizableRequestHandler<?, ?>) {
+                    futures.set(futures.get().thenApplyAsync(ctx -> {
+                        try {
+                            handlerContextThreadLocalProvider.set((HandlerContext) ctx);
+                            ((AuthorizableRequestHandler) handlerContainer.handlerBean).authenticate(
+                                    ((HandlerContext) ctx).request(),
+                                    ((HandlerContext) ctx).getInterstateTransporter()
+                            );
+                            return ctx;
+                        } finally {
+                            handlerContextThreadLocalProvider.remove();
+                        }
+                    }).thenApplyAsync(ctx -> {
+                        try {
+                            handlerContextThreadLocalProvider.set((HandlerContext) ctx);
+                            ((AuthorizableRequestHandler) handlerContainer.handlerBean).authorize(
+                                    ((HandlerContext) ctx).request(),
+                                    ((HandlerContext) ctx).getInterstateTransporter()
+                            );
+                            return ctx;
+                        } finally {
+                            handlerContextThreadLocalProvider.remove();
+                        }
+                    }));
+                }
                 handlerContainer.chainStepMethodMap.entrySet().forEach(entry -> {
                     if (entry.getValue().getReturnType().isAssignableFrom(CompletableFuture.class)) {
                         futures.set(futures.get().thenComposeAsync(ctx -> {
@@ -356,5 +419,19 @@ public class HandlerManagerAutoConfiguration {
     @ConfigurationProperties(prefix = "ir.piana.dev.common.reactive-core")
     static class ReactiveCore {
         private int threadPoolSize;
+    }
+
+    @Setter
+    @Component
+    @ConfigurationProperties(prefix = "ir.piana.dev.common.handler-roles")
+    static class HandlerRoleConfig {
+        private List<HandlerRoleItem> items;
+    }
+
+    @Setter
+    static class HandlerRoleItem {
+        private String handlerClassName;
+        private boolean allRequired;
+        private String roles;
     }
 }

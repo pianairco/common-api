@@ -1,11 +1,25 @@
 package ir.piana.dev.common.handler;
 
+import ir.piana.dev.common.auth.UserAuthentication;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class HandlerInterStateTransporter {
     public static final List<String> defaultScopes = Arrays.asList(
             "handler", "base", "common", "security", "internal");
+
+    @Setter(AccessLevel.PACKAGE)
+    @Getter
+    private UserAuthentication userAuthentication;
+
+    @Setter(AccessLevel.PACKAGE)
+    @Getter
+    private String sessionId;
+
     private Map<String, Map<String, Object>> scopeMap;
 
     HandlerInterStateTransporter() {
