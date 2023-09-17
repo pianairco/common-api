@@ -244,7 +244,7 @@ public class HandlerManagerAutoConfiguration {
             final List<Method> rollbackMethods = new ArrayList<>();
 
             if (handlerContainer != null) {
-                if (handlerContainer.handlerBean instanceof AuthorizableRequestHandler<?, ?>) {
+                if (handlerContainer.handlerBean instanceof AuthenticableRequestHandler<?, ?>) {
                     futures.set(futures.get().thenApplyAsync(ctx -> {
                         try {
                             handlerContextThreadLocalProvider.set((HandlerContext) ctx);
@@ -256,7 +256,10 @@ public class HandlerManagerAutoConfiguration {
                         } finally {
                             handlerContextThreadLocalProvider.remove();
                         }
-                    }).thenApplyAsync(ctx -> {
+                    }));
+                }
+                if (handlerContainer.handlerBean instanceof AuthorizableRequestHandler<?, ?>) {
+                    futures.set(futures.get().thenApplyAsync(ctx -> {
                         try {
                             handlerContextThreadLocalProvider.set((HandlerContext) ctx);
                             ((AuthorizableRequestHandler) handlerContainer.handlerBean).authorize(
@@ -269,6 +272,7 @@ public class HandlerManagerAutoConfiguration {
                         }
                     }));
                 }
+
                 handlerContainer.chainStepMethodMap.entrySet().forEach(entry -> {
                     if (entry.getValue().getReturnType().isAssignableFrom(CompletableFuture.class)) {
                         futures.set(futures.get().thenComposeAsync(ctx -> {

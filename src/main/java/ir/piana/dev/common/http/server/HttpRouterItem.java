@@ -10,8 +10,6 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 public class HttpRouterItem {
-    private String serverName;
-    private String templateEngineName;
+    private String name;
     private List<HttpRouteItem> routes;
-    private String authPhraseProviderName;
 }

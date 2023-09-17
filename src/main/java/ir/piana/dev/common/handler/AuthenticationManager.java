@@ -20,11 +20,9 @@ public class AuthenticationManager {
         return uuid.toString();
     }
 
-    String reassign(String uuid, Serializable principal, UserAuthorization userAuthorization) {
-
+    void reassign(String uuid, Serializable principal, UserAuthorization userAuthorization) {
         selfExpiringHashMap.put(uuid,
                 new UserAuthentication(UUID.fromString(uuid), principal, userAuthorization));
-        return uuid;
     }
 
     UserAuthentication get(String uuid) {

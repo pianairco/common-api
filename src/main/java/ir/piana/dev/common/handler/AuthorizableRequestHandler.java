@@ -3,10 +3,7 @@ package ir.piana.dev.common.handler;
 import ir.piana.dev.common.auth.RequiredRoles;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class AuthorizableRequestHandler<Req, Res> implements RequestHandler<Req, Res> {
-    protected final ContextLogger contextLogger;
-    protected final ContextLoggerProvider contextLoggerProvider;
-
+public abstract class AuthorizableRequestHandler<Req, Res> extends AuthenticableRequestHandler<Req, Res> {
     @Autowired
     AuthenticationManager authenticationManager;
     @Autowired
@@ -18,18 +15,12 @@ public abstract class AuthorizableRequestHandler<Req, Res> implements RequestHan
 
     protected AuthorizableRequestHandler(
             ContextLoggerProvider contextLoggerProvider) {
-        this.contextLoggerProvider = contextLoggerProvider;
-        this.contextLogger = contextLoggerProvider.registerLogger(this.getClass());
+        super(contextLoggerProvider);
 //        this.requiredRoles = requiredRoles();
     }
 
     final void setRequiredRoles(RequiredRoles requiredRoles) {
         this.requiredRoles = requiredRoles;
-    }
-
-    final void authenticate(
-            HandlerRequest<Req> handlerRequest, HandlerInterStateTransporter transporter) {
-        transporter.setUserAuthentication(authenticationManager.get(transporter.getSessionId()));
     }
 
     final void authorize(
