@@ -24,5 +24,4 @@ public class HttpServerItem {
     private String authPhraseProviderName;
     private String templateEngineName;
     private String permissionDeniedPage;
-    private String notFoundPage;
 }

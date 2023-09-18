@@ -12,7 +12,7 @@ public class HandlerRuntimeExceptionThrower {
         proceed(detailedError, null);
     }
 
-    public void proceed(HandlerDetailedError detailedError, Throwable throwable) {
+    public void proceed(HandlerDetailedError detailedError, Throwable throwable) throws HandlerRuntimeException {
         HandlerContext handlerContext = handlerContextThreadLocalProvider.get();
         throw new HandlerRuntimeException(handlerContext, detailedError, throwable);
     }

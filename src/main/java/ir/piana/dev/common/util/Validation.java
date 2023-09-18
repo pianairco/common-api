@@ -13,7 +13,7 @@ public final class Validation {
      * Represents the national code pattern.
      */
     public static final String NATIONAL_CODE_PATTERN = "^(\\d{10})$";
-
+    public static final String HTTP_STATUS_CODE = "^(\\d{3})$";
     /**
      * Represents the mobile number pattern.
      */
@@ -48,5 +48,9 @@ public final class Validation {
         }
 
         return false;
+    }
+
+    public static boolean isValidHttpStatusCode(String httpStatusCode) {
+        return httpStatusCode.matches(HTTP_STATUS_CODE);
     }
 }

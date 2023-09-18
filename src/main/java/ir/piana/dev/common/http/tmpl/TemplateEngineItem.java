@@ -11,4 +11,5 @@ public class TemplateEngineItem {
     private String name;
     private String dir;
     private String postfix;
+    private boolean cacheable;
 }

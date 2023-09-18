@@ -1,8 +1,6 @@
 package ir.piana.dev.common.http.server;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 import java.util.Map;
@@ -10,6 +8,8 @@ import java.util.Map;
 @Setter
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class HttpRouteItem {
     private String method;
     private String path;
