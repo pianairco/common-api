@@ -248,7 +248,7 @@ public class HandlerManagerAutoConfiguration {
                     futures.set(futures.get().thenApplyAsync(ctx -> {
                         try {
                             handlerContextThreadLocalProvider.set((HandlerContext) ctx);
-                            ((AuthorizableRequestHandler) handlerContainer.handlerBean).authenticate(
+                            ((AuthenticableRequestHandler) handlerContainer.handlerBean).authenticate(
                                     ((HandlerContext) ctx).request(),
                                     ((HandlerContext) ctx).getInterstateTransporter()
                             );

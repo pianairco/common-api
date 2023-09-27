@@ -17,7 +17,8 @@ public enum HandlerErrorType {
     UNIMPLEMENTED(13, HandlerStatusNature.SERVER_ERROR),
     INTERNAL(14, HandlerStatusNature.SERVER_ERROR),
     UNAVAILABLE(15, HandlerStatusNature.SERVER_ERROR),
-    DATA_LOSS(16, HandlerStatusNature.SERVER_ERROR);
+    DATA_LOSS(16, HandlerStatusNature.SERVER_ERROR),
+    REDIRECT(17, HandlerStatusNature.SUCCESS);
 
     private final int code;
     private final HandlerStatusNature handlerStatusNature;

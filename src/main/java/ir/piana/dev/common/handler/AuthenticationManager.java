@@ -31,7 +31,7 @@ public class AuthenticationManager {
             selfExpiringHashMap.renewKey(uuid);
         } else {
             userAuthentication = new UserAuthentication(
-                    UUID.fromString(uuid), new AnonymousPrincipal(), new UserAuthorization());
+                    UUID.fromString(uuid), new AnonymousPrincipal("anonymous"), new UserAuthorization());
             selfExpiringHashMap.put(uuid, userAuthentication);
         }
         return userAuthentication;

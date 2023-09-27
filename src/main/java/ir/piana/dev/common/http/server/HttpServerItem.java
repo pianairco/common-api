@@ -23,5 +23,4 @@ public class HttpServerItem {
     private List<String> routers;
     private String authPhraseProviderName;
     private String templateEngineName;
-    private String permissionDeniedPage;
 }
